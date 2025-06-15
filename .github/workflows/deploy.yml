@@ -38,7 +38,6 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          VITE_BASE_URL: /agile-sprint-retrospective/
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
