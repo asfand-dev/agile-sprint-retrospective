@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSessionStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Users, LogOut, Upload, Trash2 } from 'lucide-react';
+import { PlusCircle, Users, LogOut, Upload, Trash2, Moon, Sun } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { format } from 'date-fns';
+import { useTheme } from 'next-themes';
 
 type Retro = {
   id: string;
@@ -28,6 +29,7 @@ const WorkspacePage = () => {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { setTheme, theme } = useTheme();
 
   useEffect(() => {
     if (!participantId || !workspaceId) {
@@ -56,8 +58,8 @@ const WorkspacePage = () => {
 
         if (retrosError) throw retrosError;
         setRetros(retrosData);
-      } catch (error: any) {
-        toast({ title: 'Error fetching workspace data', description: error.message, variant: 'destructive' });
+      } catch (error) {
+        toast({ title: 'Error fetching workspace data', description: error instanceof Error ? error.message : 'An unknown error occurred', variant: 'destructive' });
         navigate('/');
       } finally {
         setIsLoading(false);
@@ -105,8 +107,8 @@ const WorkspacePage = () => {
         if (error) throw error;
         toast({ title: 'Success', description: 'New retrospective created!' });
         navigate(`/workspace/${workspaceId}/retro/${data.id}`);
-      } catch (error: any) {
-        toast({ title: 'Error creating retro', description: error.message, variant: 'destructive' });
+      } catch (error) {
+        toast({ title: 'Error creating retro', description: error instanceof Error ? error.message : 'An unknown error occurred', variant: 'destructive' });
       }
     }
   };
@@ -144,7 +146,7 @@ const WorkspacePage = () => {
             const newRetroId = newRetro.id;
 
             if (importedData.retroItems.length > 0) {
-                const itemsToInsert = importedData.retroItems.map((item: any) => ({
+                const itemsToInsert = importedData.retroItems.map((item: { description: string; votes?: number; column_type: string }) => ({
                     retro_id: newRetroId,
                     participant_id: participantId!,
                     description: item.description,
@@ -156,7 +158,7 @@ const WorkspacePage = () => {
             }
 
             if (importedData.actionItems.length > 0) {
-                const actionItemsToInsert = importedData.actionItems.map((item: any) => ({
+                const actionItemsToInsert = importedData.actionItems.map((item: { description: string; votes?: number }) => ({
                     retro_id: newRetroId,
                     participant_id: participantId!,
                     description: item.description,
@@ -169,8 +171,8 @@ const WorkspacePage = () => {
             toast({ title: 'Success', description: 'Retro imported successfully!' });
             navigate(`/workspace/${workspaceId}/retro/${newRetroId}`);
 
-        } catch (error: any) {
-            toast({ title: 'Import Error', description: error.message, variant: 'destructive' });
+        } catch (error) {
+            toast({ title: 'Import Error', description: error instanceof Error ? error.message : 'An unknown error occurred', variant: 'destructive' });
         } finally {
             if(event.target) event.target.value = '';
         }
@@ -191,8 +193,8 @@ const WorkspacePage = () => {
         if (error) throw error;
         toast({ title: 'Success', description: 'Retrospective deleted.' });
         setRetros(currentRetros => currentRetros.filter(retro => retro.id !== retroId));
-      } catch (error: any) {
-        toast({ title: 'Error deleting retro', description: error.message, variant: 'destructive' });
+      } catch (error) {
+        toast({ title: 'Error deleting retro', description: error instanceof Error ? error.message : 'An unknown error occurred', variant: 'destructive' });
       }
     }
   };
@@ -211,6 +213,15 @@ const WorkspacePage = () => {
           </div>
           <div className="flex items-center gap-2">
             <input type="file" ref={fileInputRef} onChange={handleFileImport} accept=".json" className="hidden" />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            >
+              <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+              <span className="sr-only">Toggle theme</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={handleLogout}><LogOut /> Logout</Button>
             <Button variant="outline" onClick={handleImportClick}><Upload /> Import Retro</Button>
             <Button onClick={handleCreateRetro}><PlusCircle /> New Retro</Button>
