@@ -24,22 +24,39 @@ const JoinRetroPrompt = ({ workspaceId, onJoin }: JoinRetroPromptProps) => {
         }
         setIsLoading(true);
         try {
-            const { data, error } = await supabase
+            // Check for existing participant
+            const { data: existingParticipant, error: existingError } = await supabase
                 .from('session_participants')
-                .insert({ name: name.trim(), session_id: workspaceId })
                 .select('id')
+                .eq('session_id', workspaceId)
+                .eq('name', name.trim())
                 .single();
-            
-            if (error) throw error;
 
-            if (data?.id) {
-                toast({ title: 'Success', description: `Welcome, ${name.trim()}!`});
-                onJoin(data.id);
-            } else {
-                throw new Error("Could not create participant.");
+            if (existingError && existingError.code !== 'PGRST116') {
+                throw existingError;
             }
-        } catch (error: any) {
-            toast({ title: 'Error joining session', description: error.message, variant: 'destructive' });
+
+            if (existingParticipant) {
+                toast({ title: `Welcome back, ${name.trim()}!`, description: 'You have rejoined the session.'});
+                onJoin(existingParticipant.id);
+            } else {
+                const { data, error } = await supabase
+                    .from('session_participants')
+                    .insert({ name: name.trim(), session_id: workspaceId })
+                    .select('id')
+                    .single();
+                
+                if (error) throw error;
+
+                if (data?.id) {
+                    toast({ title: 'Success', description: `Welcome, ${name.trim()}!`});
+                    onJoin(data.id);
+                } else {
+                    throw new Error("Could not create participant.");
+                }
+            }
+        } catch (error) {
+            toast({ title: 'Error joining session', description: error instanceof Error ? error.message : 'An unexpected error occurred.', variant: 'destructive' });
         } finally {
             setIsLoading(false);
         }

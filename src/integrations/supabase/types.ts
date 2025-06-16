@@ -14,7 +14,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
-          participant_id: string
+          participant_id: string | null
           retro_id: string
           updated_at: string
           votes: number
@@ -23,7 +23,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
-          participant_id: string
+          participant_id: string | null
           retro_id: string
           updated_at?: string
           votes?: number
@@ -32,7 +32,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
-          participant_id?: string
+          participant_id?: string | null
           retro_id?: string
           updated_at?: string
           votes?: number
@@ -60,7 +60,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
-          participant_id: string
+          participant_id: string | null
           retro_id: string
           updated_at: string
           votes: number
@@ -70,7 +70,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
-          participant_id: string
+          participant_id: string | null
           retro_id: string
           updated_at?: string
           votes?: number
@@ -80,7 +80,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
-          participant_id?: string
+          participant_id?: string | null
           retro_id?: string
           updated_at?: string
           votes?: number

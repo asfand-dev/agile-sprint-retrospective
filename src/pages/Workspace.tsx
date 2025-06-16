@@ -199,6 +199,19 @@ const WorkspacePage = () => {
     }
   };
 
+  const handleDeleteParticipant = async (participantIdToDelete: string) => {
+    if (window.confirm('Are you sure you want to remove this participant? Their contributions will be marked as "Deleted user".')) {
+      try {
+        const { error } = await supabase.from('session_participants').delete().eq('id', participantIdToDelete);
+        if (error) throw error;
+        toast({ title: 'Success', description: 'Participant removed.' });
+        setParticipants(currentParticipants => currentParticipants.filter(p => p.id !== participantIdToDelete));
+      } catch (error) {
+        toast({ title: 'Error removing participant', description: error instanceof Error ? error.message : 'An unknown error occurred', variant: 'destructive' });
+      }
+    }
+  };
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading workspace...</div>;
   }
@@ -283,8 +296,20 @@ const WorkspacePage = () => {
                 <CardContent>
                     <ul className="space-y-2">
                         {participants.map(p => (
-                            <li key={p.id} className={`p-2 rounded-md ${p.id === participantId ? 'bg-primary/20 text-primary-foreground font-semibold' : ''}`}>
-                                {p.name} {p.id === participantId && '(You)'}
+                            <li key={p.id} className={`p-2 rounded-md flex justify-between items-center ${p.id === participantId ? 'bg-primary/20 text-primary-foreground font-semibold' : ''}`}>
+                                <span>
+                                    {p.name} {p.id === participantId && '(You)'}
+                                </span>
+                                {p.id !== participantId && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive h-6 w-6"
+                                        onClick={() => handleDeleteParticipant(p.id)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                )}
                             </li>
                         ))}
                     </ul>

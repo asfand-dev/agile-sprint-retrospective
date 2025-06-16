@@ -18,7 +18,7 @@ export function JoinWorkspaceForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!workspaceName || !password || !userName) {
+    if (!workspaceName.trim() || !password.trim() || !userName.trim()) {
       toast({ title: 'Error', description: 'All fields are required.', variant: 'destructive' });
       return;
     }
@@ -40,23 +40,45 @@ export function JoinWorkspaceForm() {
         throw new Error('Incorrect password.');
       }
 
-      // Create participant
-      const { data: participantData, error: participantError } = await supabase
+      // Check for existing participant with the same name
+      const { data: existingParticipant, error: existingParticipantError } = await supabase
         .from('session_participants')
-        .insert({ session_id: sessionData.id, name: userName })
-        .select()
+        .select('id')
+        .eq('session_id', sessionData.id)
+        .eq('name', userName.trim())
         .single();
 
-      if (participantError) throw participantError;
+      if (existingParticipantError && existingParticipantError.code !== 'PGRST116') { // PGRST116: "exact one row expected, but 0 rows returned"
+        throw existingParticipantError;
+      }
+      
+      let participantId: string;
+      if (existingParticipant) {
+          participantId = existingParticipant.id;
+          toast({ title: 'Welcome back!', description: `You have rejoined as ${userName.trim()}.` });
+      } else {
+        // Create participant
+        const { data: participantData, error: participantError } = await supabase
+          .from('session_participants')
+          .insert({ session_id: sessionData.id, name: userName.trim() })
+          .select('id')
+          .single();
 
-      setParticipant(participantData.id, sessionData.id);
-      toast({ title: 'Success', description: 'Joined workspace successfully!' });
+        if (participantError) throw participantError;
+        if (!participantData) throw new Error("Could not create participant.");
+
+        participantId = participantData.id;
+        toast({ title: 'Success', description: 'Joined workspace successfully!' });
+      }
+
+      setParticipant(participantId, sessionData.id);
+
       navigate(`/workspace/${sessionData.id}`);
 
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Error joining workspace',
-        description: error.message || 'An unexpected error occurred.',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred.',
         variant: 'destructive',
       });
     } finally {
@@ -91,7 +113,7 @@ export function JoinWorkspaceForm() {
             onChange={(e) => setUserName(e.target.value)}
             disabled={isLoading}
           />
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full" disabled={isLoading || !workspaceName.trim() || !password.trim() || !userName.trim()}>
             {isLoading ? 'Joining...' : 'Join Workspace'}
           </Button>
         </form>
