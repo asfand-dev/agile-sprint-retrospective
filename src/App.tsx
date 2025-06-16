@@ -9,6 +9,8 @@ import NotFound from "./pages/NotFound";
 import WorkspacePage from "./pages/Workspace";
 import RetroPage from "./pages/Retro";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { Alert, AlertDescription, AlertTitle } from "./components/ui/alert";
+import { AlertCircleIcon } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +20,14 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <div className="m-8">
+          <Alert variant="destructive">
+            <AlertCircleIcon className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Heads up!</strong> This is a demo app and it is for testing purposes only. You should not use your real data here.
+            </AlertDescription>
+          </Alert>
+        </div>
         <HashRouter>
           <Routes>
             <Route path="/" element={<Index />} />
